@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AKY Transport Booking</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg-light: #eef2f3;
+    --bg-dark: #1c1c1c;
+    --text-light: #333;
+    --text-dark: #eee;
+    --primary: #1e88e5;
+    --primary-dark: #1565c0;
+    --accent: #ff6f61;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+  }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-light);
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    min-height: 100vh;
+  }
+  body.dark-mode {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+
+  /* Loader styles */
+  #loadingOverlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 99999; display: none;
+  }
+  #loadingSpinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid var(--primary);
+    border-radius: 50%;
+    width: 50px; height: 50px; animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+
+  /* Centered container for login */
+  .centered {
+    display: flex; justify-content: center; align-items: center; height: 100vh;
+  }
+
+  /* Login box */
+  #loginPage {
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    padding: 20px;
+  }
+  .login-box {
+    background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    max-width: 350px; width: 90%; text-align: center;
+  }
+  .login-box h2 {
+    margin-bottom: 20px; color: var(--primary);
+  }
+  .login-box input {
+    width: 100%; padding: 12px 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc;
+  }
+  .login-box button {
+    width: 100%; padding: 14px; margin-top: 15px; background-color: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.3s, transform 0.2s;
+  }
+  .login-box button:hover {
+    background-color: var(--primary-dark); transform: translateY(-2px);
+  }
+
+  /* Main page styles, hidden initially */
+  #mainPage {
+    display: none; flex-direction: column; min-height: 100vh;
+  }
+  header {
+    background: var(--primary); color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center;
+  }
+  header h1 { font-weight: 600; }
+  .theme-btn {
+    background: transparent; border: 2px solid #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.3s, transform 0.2s;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+  nav {
+    display: flex; justify-content: space-between; padding: 10px 20px; background: #f5f5f5;
+  }
+  nav span { font-weight: 600; }
+  nav button {
+    padding: 8px 16px; background: linear-gradient(to right, #1e88e5, #42a5f5); color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s;
+  }
+  nav button:hover { background: linear-gradient(to right, #1565c0, #2196f3); }
+  .container { padding: 20px; max-width: 1000px; margin: auto; flex: 1; }
+
+  /* Transport options */
+  .transport-option { display: flex; align-items: center; font-size: 20px; margin-bottom: 10px; }
+  .transport-option span { margin-right: 10px; }
+
+  /* Form styles */
+  form {
+    display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+    background: rgba(255,255,255,0.8); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  form label { flex: 1 100%; margin-bottom: 5px; font-weight: 600; }
+  form select {
+    padding: 10px; border-radius: 8px; border: 1px solid #ccc; width: 100%;
+  }
+  button[type="submit"] {
+    padding: 14px; background-color: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; transition: background 0.3s, transform 0.2s;
+  }
+  button[type="submit"]:hover {
+    background-color: var(--primary-dark); transform: scale(1.02);
+  }
+
+  /* Summary & map */
+  #summary, #map {
+    margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  #summary h3 { margin-bottom: 15px; }
+  #map iframe { width: 100%; height: 300px; border-radius: 12px; border: none; }
+
+  /* Next button */
+  #nextStepBtn {
+    display: none; margin-top: 20px; padding: 14px; width: 100%; font-size: 16px; border-radius: 8px; border: none; background: linear-gradient(to right, #1e88e5, #42a5f5); color: #fff; cursor: pointer; transition: background 0.3s, transform 0.2s;
+  }
+  #nextStepBtn:hover {
+    background: linear-gradient(to right, #1565c0, #2196f3); transform: scale(1.02);
+  }
+
+  /* Passenger details & ticket */
+  #userDetails {
+    display: none; margin-top: 20px; background: #fff; padding: 20px; border-radius: 12px;
+  }
+  #userDetails h3 { margin-bottom: 15px; }
+  #userDetails input, #userDetails select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; }
+  #finalizeBtn {
+    margin-top: 15px; padding: 14px; width: 100%; font-size: 16px; border-radius: 8px; border: none; background: var(--primary); color: #fff; cursor: pointer; transition: background 0.3s, transform 0.2s;
+  }
+  #finalizeBtn:hover { background: var(--primary-dark); transform: scale(1.02); }
+
+  /* Ticket confirmation */
+  #ticketConfirmation {
+    display: none; margin-top: 20px; background: #e0ffe0; padding: 20px; border-radius: 12px;
+  }
+  #ticketConfirmation h3 { margin-bottom: 15px; color: #4CAF50; }
+
+  /* Dark mode styles */
+  body.dark-mode {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+  body.dark-mode header h1 { color: var(--text-dark); }
+  body.dark-mode nav span,
+  body.dark-mode nav button {
+    color: var(--text-dark);
+  }
+  body.dark-mode form label,
+  body.dark-mode input,
+  body.dark-mode select,
+  body.dark-mode button {
+    background: transparent; color: var(--text-dark);
+  }
+  body.dark-mode #userDetails,
+  body.dark-mode #ticketConfirmation {
+    background: #333;
+  }
+  body.dark-mode #ticketConfirmation h3 { color: #eee; }
+
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div id="loadingSpinner"></div>
+</div>
+
+<!-- Login Page -->
+<div id="loginPage" class="centered">
+  <div class="login-box">
+    <h2>🔐 Login</h2>
+    <input id="username" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="login()">🚀 Enter</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="mainPage" style="display:none; flex-direction:column; min-height:100vh;">
+  <header>
+    <h1>AKY Transport Booking</h1>
+    <button class="theme-btn" onclick="themeToggle()">🌗 Theme</button>
+  </header>
+  <nav>
+    <span>Welcome 👋</span>
+    <button onclick="logout()">Logout</button>
+  </nav>
+  <div class="container">
+
+    <!-- Transport options -->
+    <div style="margin-bottom:15px; display:flex; justify-content:space-around;">
+      <div class="transport-option"><span>✈️</span> <strong>Flight</strong></div>
+      <div class="transport-option"><span>🚆</span> <strong>Train</strong></div>
+      <div class="transport-option"><span>🚌</span> <strong>Bus</strong></div>
+    </div>
+
+    <!-- Booking form -->
+    <form onsubmit="return startBooking()">
+      <label>Transport Mode</label>
+      <select id="transport" onchange="updateRoutes()" required>
+        <option value="">--Select--</option>
+        <option value="Flight">✈️ Flight</option>
+        <option value="Train">🚆 Train</option>
+        <option value="Bus">🚌 Bus</option>
+      </select>
+      <label>From</label>
+      <select id="from" required></select>
+      <label>To</label>
+      <select id="to" required></select>
+      <button type="submit">📍 Book & Show Route</button>
+    </form>
+
+    <!-- Summary & Map -->
+    <div id="summary"></div>
+    <div id="map"></div>
+    <button id="nextStepBtn" onclick="showUserDetails()">Next: Enter Details</button>
+
+    <!-- Passenger & Payment -->
+    <div id="userDetails">
+      <h3>Enter Your Details & Payment</h3>
+      <input id="fullName" placeholder="Full Name" />
+      <input id="email" placeholder="Email" type="email" />
+      <input id="phone" placeholder="Phone Number" />
+      <label>Payment Method:</label>
+      <select id="paymentMethod">
+        <option value="">--Select--</option>
+        <option>Credit Card</option>
+        <option>Debit Card</option>
+        <option>PayPal</option>
+        <option>Cash</option>
+      </select>
+      <button id="finalizeBtn" onclick="finalizeBooking()">💳 Pay & Confirm</button>
+    </div>
+
+    <!-- Ticket Confirmation -->
+    <div id="ticketConfirmation"></div>
+
+  </div>
+</div>
+
+<script>
+  // Data arrays
+  const indianCities = ["Delhi", "Mumbai", "Bengaluru", "Kolkata", "Chennai", "Hyderabad", "Ahmedabad", "Pune", "Jaipur", "Lucknow"];
+  const globalCities = ["New York", "London", "Dubai", "Singapore", "Tokyo", "Paris", "Sydney", "Toronto", "Cape Town", "Beijing"];
+  const tnDistricts = ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kancheepuram", "Karur", "Krishnagiri",
+    "Madurai", "Mayiladuthurai","Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivagangai", "Tenkasi", "Thanjavur",
+    "Theni", "Thiruvallur", "Thiruvarur","Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupattur", "Tiruppur", "Tiruvannamalai", "Vellore", "Viluppuram", "Virudhunagar",
+    "Thiruvottiyur", "Tambaram", "Hosur", "Mettur"
+  ];
+
+  // Show loader on page load
+  window.onload = () => {
+    document.getElementById('loadingOverlay').style.display='flex';
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').style.display='none';
+      if(localStorage.getItem("AKYLogin")==="true"){
+        showMain();
+      } else {
+        document.getElementById("loginPage").style.display="flex";
+      }
+    }, 1500);
+  };
+
+  function login() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if(user && pass){
+      localStorage.setItem("AKYLogin", "true");
+      showMain();
+    } else {
+      alert("Please enter username and password");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("AKYLogin");
+    location.reload();
+  }
+
+  function showMain() {
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("mainPage").style.display="flex";
+  }
+
+  // Theme toggle
+  function themeToggle() {
+    document.body.classList.toggle('dark-mode');
+  }
+
+  // Populate route options based on mode
+  function updateRoutes() {
+    const mode = document.getElementById("transport").value;
+    let list = [];
+    if(mode==="Flight") list = [...globalCities, ...indianCities];
+    else if(mode==="Train") list = [...indianCities, ...tnDistricts];
+    else if(mode==="Bus") list = [...tnDistricts, ...indianCities];
+    fillDropdown(document.getElementById("from"), list);
+    fillDropdown(document.getElementById("to"), list);
+    clearDisplay();
+  }
+
+  function fillDropdown(sel, arr) {
+    sel.innerHTML = '<option value="">--Select--</option>';
+    arr.forEach(p => sel.innerHTML += `<option>${p}</option>`);
+  }
+
+  function clearDisplay() {
+    document.getElementById("summary").innerHTML="";
+    document.getElementById("map").innerHTML="";
+    document.getElementById("nextStepBtn").style.display="none";
+    document.getElementById("userDetails").style.display="none";
+    document.getElementById("ticketConfirmation").style.display="none";
+  }
+
+  // Start booking
+function startBooking() {
+  const mode = document.getElementById("transport").value;
+  const origin = document.getElementById("from").value;
+  const destination = document.getElementById("to").value;
+  if(!mode || !origin || !destination){
+    alert("Select all options");
+    return false;
+  }
+  const time = new Date().toLocaleString();
+
+  // Show summary
+  document.getElementById("summary").innerHTML = `
+    <h3>Booking Summary</h3>
+    <p><strong>Mode:</strong> ${mode}</p>
+    <p><strong>From:</strong> ${origin}</p>
+    <p><strong>To:</strong> ${destination}</p>
+    <p><strong>Time:</strong> ${time}</p>
+  `;
+
+  // Show Google Map Directions (ensure you replace YOUR_API_KEY with actual key)
+  document.getElementById("map").innerHTML = `<iframe
+    src="https://www.google.com/maps/embed/v1/directions?key=YOUR_API_KEY&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}"
+    allowfullscreen loading="lazy"></iframe>`;
+
+  document.getElementById("nextStepBtn").style.display="block";
+
+  // Save data for later
+  window.bookingData = {
+    mode, origin, destination, time
+  };
+
+  return false;
+}
+
+// Show Passenger Details
+function showUserDetails() {
+  if(!window.bookingData) {
+    alert("Please complete the booking summary first");
+    return;
+  }
+  document.getElementById("userDetails").style.display="block";
+
+  // Generate OTP
+  generateOTP();
+
+  // Show booking time
+  document.getElementById("userDetails").insertAdjacentHTML(
+    'afterbegin',
+    `<p style="margin-top:10px;">Booking Time: ${window.bookingData.time}</p>`
+  );
+}
+
+// Generate OTP
+let currentOTP = "";
+function generateOTP() {
+  currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+  alert("OTP for verification: " + currentOTP);
+}
+
+// Verify OTP
+function verifyOTP() {
+  const userOTP = prompt("Enter the OTP sent to you:");
+  if(userOTP===currentOTP){
+    alert("OTP Verified!");
+    return true;
+  } else {
+    alert("Incorrect OTP");
+    return false;
+  }
+}
+
+// Finalize booking
+function finalizeBooking() {
+  if(!verifyOTP()) return;
+
+  const name = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const payment = document.getElementById("paymentMethod").value;
+
+  if(!name || !email || !phone || !payment) {
+    alert("Fill all details");
+    return;
+  }
+
+  const timeStr = new Date().toLocaleString();
+
+  // Generate ticket based on mode
+  let ticketHTML = `
+    <h3>🎫 Ticket</h3>
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Mode:</strong> ${window.bookingData.mode}</p>
+    <p><strong>From:</strong> ${window.bookingData.origin}</p>
+    <p><strong>To:</strong> ${window.bookingData.destination}</p>
+    <p><strong>Date & Time:</strong> ${timeStr}</p>
+    <p><strong>Payment:</strong> ${payment}</p>
+  `;
+
+  if(window.bookingData.mode==="Flight") {
+    ticketHTML += `<p>Flight No: ${randomFlightNumber()}</p>
+                   <p>Seat: ${randomSeat()}</p>`;
+  } else if (window.bookingData.mode==="Train") {
+    ticketHTML += `<p>Train No: ${randomTrainNumber()}</p>
+                   <p>Coach: ${randomCoach()}</p>
+                   <p>Seat: ${randomSeat()}</p>`;
+  }
+
+  document.getElementById("ticketConfirmation").innerHTML = ticketHTML;
+  document.getElementById("ticketConfirmation").style.display="block";
+
+  // Hide passenger form
+  document.getElementById("userDetails").style.display="none";
+}
+
+// Helpers for ticket details
+function randomFlightNumber() {
+  const codes = ["AI", "BA", "QF", "EK", "LH", "AF", "CX", "JL", "DL"];
+  const code = codes[Math.floor(Math.random() * codes.length)];
+  return code + Math.floor(1000 + Math.random() * 9000);
+}
+function randomTrainNumber() {
+  const prefixes = ["TN", "K", "S", "R", "P"];
+  const p = prefixes[Math.floor(Math.random() * prefixes.length)];
+  return p + Math.floor(1000 + Math.random() * 9000);
+}
+function randomCoach() {
+  const coaches = ["A", "B", "C", "D", "E"];
+  return coaches[Math.floor(Math.random() * coaches.length)];
+}
+function randomSeat() {
+  const row = Math.floor(1 + Math.random() * 20);
+  const col = String.fromCharCode(65 + Math.floor(Math.random() * 6));
+  return row + col;
+}
+</script>
+</body>
+</html>
